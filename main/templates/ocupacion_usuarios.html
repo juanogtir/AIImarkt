@@ -1,0 +1,25 @@
+{% extends 'master.html' %}
+
+{% block titulo %} Lista de Usuarios {% endblock %}
+
+{% block ocupacionesActiva %} uk-active {% endblock %}
+
+
+
+{% block contenido %} 
+    <h1>Lista de Usuarios</h1>
+    <div class="uk-animation-fade">
+	    <div class="uk-accordion" data-uk-accordion="{collapse: false}">
+	    {% for row in usuarios %}
+	    	<h3 class="uk-accordion-title">Ocupacion: {{row.ocupacion}} ({{row.usuarios|length}} usuarios)</h3>
+	    	<div class="uk-accordion-content">
+	    		<ul class="uk-list  uk-list-striped">
+	    		{% for user in row.usuarios %}
+					<li><strong>Id Usuario:</strong> {{user.idUsuario}} | <strong>Edad:</strong> {{user.edad}} | <strong>Codigo Postal:</strong> {{user.codigoPostal}}</li>
+				{% endfor %}
+			    </ul>
+	    	</div>
+		{% endfor %}
+		</div>
+	</div>
+{% endblock %}

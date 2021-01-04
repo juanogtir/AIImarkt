@@ -1,0 +1,21 @@
+{% extends 'master.html' %}
+
+{% block titulo %} Lista de Peliculas {% endblock %}
+
+
+{% block peliculasActiva %} uk-active {% endblock %}
+
+
+{% block contenido %} 
+    <h1>Lista de las 5 Mejores Peliculas</h1>
+    <div class="uk-animation-shake">
+	    <dl class="uk-description-list-line">
+
+		{% for row in peliculas %}
+		    <dt>{{row.idPelicula.titulo}} | Nota Media: {{row.avg_rating}}/5</dt>
+		    <dd>{{row.idPelicula.fechaEstreno}} | <a href="{{row.imdbUrl}}">{{row.idPelicula.imdbUrl}}</a></dd>	
+		{% endfor %}
+
+		</dl>
+	</div>
+{% endblock %}
