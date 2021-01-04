@@ -8,6 +8,9 @@ class PieChoice(Enum):
     DER="derecho"
     AMB="ambidiestro"
     IND="indeterminado"
+    
+    def __str__(self):
+        return self.value
 
 class PosicionPrincipal(models.Model):
     nombre = models.TextField(verbose_name='Posición principal')
@@ -46,6 +49,7 @@ class Jugador(models.Model):
     valor=models.FloatField(verbose_name='Valor')
     contrato= models.DateField(verbose_name='Contrato')
     capitan=models.BooleanField()
+    foto_jugador=models.URLField(verbose_name='URL de la foto del jugador')
 
     pie=models.CharField(max_length=3,verbose_name='Pie',choices=[(tag,tag.value) for tag in PieChoice])
 
@@ -57,7 +61,7 @@ class Jugador(models.Model):
     equipo=models.ForeignKey(Equipo,on_delete=models.CASCADE)
 
     def __str__(self):
-        return self.nombre+" ("+self.edad+")"
+        return self.nombre+" ("+str(self.edad)+")"
     class Meta:
         ordering = ('nombre', 'valor','idJugador')
         db_table = "Jugadores"

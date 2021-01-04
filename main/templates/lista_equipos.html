@@ -1,0 +1,22 @@
+{% extends 'master.html' %} {% block titulo %} Listado de equipos {%endblock %} {% block contenido %}
+<div class="uk-animation-slide-bottom">
+	{% if equipos %}
+	<h3>Equipos: {{ equipos|length }}</h3>
+	<dl class="uk-description-list-line">
+		<hr>
+		{% for row in equipos %}
+
+		<dt>
+			<strong><img src={{row.0.url_escudo}} , height="50px"
+				,width="50px" /> {{row.0}}</strong>
+		</dt>
+		<dd>Valor: {{row.0.valor}} M euros</dd>
+		<dd>Capitan: {{row.1}}</dd>
+		<hr>
+		{% endfor %}
+
+	</dl>
+
+	{% endif %}
+</div>
+{% endblock %}

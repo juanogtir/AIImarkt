@@ -19,5 +19,12 @@ from main import views
 
 urlpatterns = [
     path('admin/', admin.site.urls),
-    path('populate/', views.populateDatabase),  
+    path('',views.index),
+    path('populate/', views.populateDatabase),
+    path('whoosh/', views.index_whoosh),
+    path('whoosh/buscar_posicion_valor', views.whoosh_buscar_posicion_valor),
+    path('whoosh/buscar_nacionalidad', views.whoosh_buscar_nacionalidad),
+    path('whoosh/buscar_contrato', views.whoosh_buscar_contrato), 
+    path('listado_equipos/', views.lista_equipos),  
+    path('listado_jugadores/', views.lista_jugadores_por_equipo),
 ]

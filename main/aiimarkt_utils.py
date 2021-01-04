@@ -1,5 +1,5 @@
 from bs4 import BeautifulSoup
-from main.models import Jugador,Equipo,Pais,PieChoice,PosicionPrincipal,PosicionSecundaria
+from main.models import Jugador, Equipo, Pais, PieChoice, PosicionPrincipal, PosicionSecundaria
 import sqlite3
 import lxml
 from datetime import datetime
@@ -10,12 +10,11 @@ from whoosh.qparser import QueryParser, MultifieldParser, OrGroup
 import re, os, shutil
 from datetime import date
 
-
 HEADERS = {'User-Agent': 
            'Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/47.0.2526.106 Safari/537.36'}
 TRANSFERMARKT = "https://www.transfermarkt.es"
-BASE_LEAGUE="/aii/marktwerteverein/wettbewerb/"
-LALIGA = BASE_LEAGUE+"ES1"
+BASE_LEAGUE = "/main/marktwerteverein/wettbewerb/"
+LALIGA = BASE_LEAGUE + "ES1"
 LIMITE_EQUIPOS = 20  # Hasta 20
 
 
@@ -40,13 +39,13 @@ def extraer_equipos():
     return lista_equipos
 
 
-def extraer_jugadores(nombre_equipo,url_equipo):
+def extraer_jugadores(nombre_equipo, url_equipo):
     s = bs_transfermarkt(url_equipo)
     tabla_jugadores = s.find("div", id="yw1").find("table", class_="items").tbody
     td_jugadores = tabla_jugadores.find_all("td", class_="hauptlink")
-    div_club=s.find("div",id="verein_head")
-    div_escudo=div_club.find("div",class_="dataBild")
-    escudo_url=div_escudo.find("img",alt=nombre_equipo)["src"]
+    div_club = s.find("div", id="verein_head")
+    div_escudo = div_club.find("div", class_="dataBild")
+    escudo_url = div_escudo.find("img", alt=nombre_equipo)["src"]
     
     info_valor = s.find("div", class_="dataMarktwert")
     valor_equipo = extrae_valor(info_valor)
@@ -57,13 +56,13 @@ def extraer_jugadores(nombre_equipo,url_equipo):
         if span != None:
             nombre = span.a.text
             enlace_jugador = TRANSFERMARKT + span.a["href"]
-            if td.find("span",title="Capitán de equipo"):
-                capitan=True
+            if td.find("span", title="Capitán de equipo"):
+                capitan = True
             else:
-                capitan=False
+                capitan = False
             
             lista_enlaces_jugadores.append({"nombre":nombre, "enlace":enlace_jugador, "capitan":capitan})
-    return lista_enlaces_jugadores,escudo_url,valor_equipo
+    return lista_enlaces_jugadores, escudo_url, valor_equipo
 
     
 def obtiene_posiciones(contents_posiciones, br):
@@ -76,8 +75,9 @@ def obtiene_posiciones(contents_posiciones, br):
         
     return ",".join(posiciones)
 
+
 def extrae_valor(div):
-    valor=float(0)
+    valor = float(0)
     if div:
         info_valor = div.a.text.split("€")
         info_valor_splitted = info_valor[0].strip()
@@ -93,11 +93,12 @@ def extrae_valor(div):
     return valor
     
     
-def extraer_datos_jugador(url_jugador):
+def extraer_datos_jugador(url_jugador, nombre):
     s = bs_transfermarkt(url_jugador)
     # Valor
     info_valor = s.find("div", class_="dataMarktwert")
     valor = extrae_valor(info_valor)
+    foto_url = s.find("div", class_="dataBild").find("img", alt=nombre)["src"]
     
     # Datos del jugador
     div_datos_jugador = s.find("div", class_="row collapse")
@@ -110,7 +111,7 @@ def extraer_datos_jugador(url_jugador):
         altura = re.findall(r"[-+]?\d*\,\d+|\d+", altura_m)
         altura = float(altura[0].replace(",", "."))
     else:
-        altura=float(0.)
+        altura = float(0.)
     
     if tabla_ficha_jugador.find("th", string="Pie:"):
         pie = tabla_ficha_jugador.find("th", string="Pie:").find_next_sibling("td").get_text().strip()
@@ -123,7 +124,7 @@ def extraer_datos_jugador(url_jugador):
         nacionalidades_lista.append(pais)
     nacionalidades = ",".join(nacionalidades_lista)
     if tabla_ficha_jugador.find("th", string="Contrato hasta:").find_next_sibling("td").get_text().strip() == "-":
-        contrato=datetime.strptime("30/06/2099", '%d/%m/%Y')
+        contrato = datetime.strptime("30/06/2099", '%d/%m/%Y')
     else:
         contrato = datetime.strptime(tabla_ficha_jugador.find("th", string="Contrato hasta:").find_next_sibling("td").get_text().strip(), '%d/%m/%Y')
 
@@ -143,58 +144,57 @@ def extraer_datos_jugador(url_jugador):
         else:
             posicion_secundaria = "Ninguna"
     elif tabla_ficha_jugador.find("th", string=re.compile("Posici.n:")):
-        posicion_principal=tabla_ficha_jugador.find("th", string=re.compile("Posici.n:")).find_next_sibling("td").get_text().strip()
-        posicion_secundaria="Ninguna"
+        posicion_principal = tabla_ficha_jugador.find("th", string=re.compile("Posici.n:")).find_next_sibling("td").get_text().strip()
+        posicion_secundaria = "Ninguna"
     else:
-        posicion_principal="Ninguna"
-        posicion_secundaria="Ninguna"
+        posicion_principal = "Ninguna"
+        posicion_secundaria = "Ninguna"
     
-    return edad, altura, nacionalidades, pie, posicion_principal, posicion_secundaria, valor, contrato
+    return edad, altura, nacionalidades, pie, posicion_principal, posicion_secundaria, valor, contrato, foto_url
 
     
 def almacenar_datos_bs():
     equipos = extraer_equipos()
     lista_whoosh = []
     
+    tablas = [Jugador, Equipo, Pais, PosicionPrincipal, PosicionSecundaria]
+    for tabla in tablas:
+        tabla.objects.all().delete()
     progreso = 1
     for eq in equipos:
-        print("Analizando ", progreso, " de ", LIMITE_EQUIPOS,' equipos')
+        print("Analizando ", progreso, " de ", len(equipos), ' equipos')
         equipo = eq["equipo"]
-        lista_jugadores,escudo_url,valor_equipo = extraer_jugadores(eq["equipo"],eq["enlace"])
+        lista_jugadores, escudo_url, valor_equipo = extraer_jugadores(eq["equipo"], eq["enlace"])
         for jugador in lista_jugadores:
             nombre = jugador["nombre"]
-            capitan=jugador["capitan"]
+            capitan = jugador["capitan"]
             
-            edad, altura, nacionalidad, pie, posicion_principal, posicion_secundaria, valor, contrato = extraer_datos_jugador(jugador["enlace"])
-            
-            #id=lista_jugadores.index(jugador)
-            
+            edad, altura, nacionalidad, pie, posicion_principal, posicion_secundaria, valor, contrato, foto_jugador = extraer_datos_jugador(jugador["enlace"], nombre)
+                        
             if pie == PieChoice.IZQ.value:
-                pie_choice=PieChoice.IZQ
+                pie_choice = PieChoice.IZQ
             elif pie == PieChoice.DER.value:
-                pie_choice=PieChoice.DER
+                pie_choice = PieChoice.DER
             elif pie == PieChoice.AMB.value:
-                pie_choice=PieChoice.AMB
+                pie_choice = PieChoice.AMB
             elif pie == PieChoice.IND.value:
-                pie_choice=PieChoice.IND
+                pie_choice = PieChoice.IND
             
-            equip,created=Equipo.objects.get_or_create(nombre=equipo,valor=valor_equipo,url_escudo=escudo_url)
+            equip, created = Equipo.objects.get_or_create(nombre=equipo, valor=valor_equipo, url_escudo=escudo_url)
             
-            pos_princ,created=PosicionPrincipal.objects.get_or_create(nombre=posicion_principal)
-            contr=date(contrato.year,contrato.month,contrato.day)
+            pos_princ, created = PosicionPrincipal.objects.get_or_create(nombre=posicion_principal)
+            contr = date(contrato.year, contrato.month, contrato.day)
 
-            jug,created=Jugador.objects.get_or_create(nombre=nombre,edad=edad,altura=altura,valor=valor,contrato=contr,capitan=capitan,pie=pie_choice,posicion_principal=pos_princ,equipo=equip)
+            jug, created = Jugador.objects.get_or_create(nombre=nombre, edad=edad, altura=altura, valor=valor, contrato=contr, capitan=capitan, foto_jugador=foto_jugador, pie=pie_choice, posicion_principal=pos_princ, equipo=equip)
             jug.save()
-            posicion_secundaria_split=posicion_secundaria.split(",")
+            posicion_secundaria_split = posicion_secundaria.split(",")
             for p_s in posicion_secundaria_split:
-                pos_sec,created=PosicionSecundaria.objects.get_or_create(nombre=p_s)
+                pos_sec, created = PosicionSecundaria.objects.get_or_create(nombre=p_s)
                 jug.posiciones_secundarias.add(pos_sec)
-            paises_split=nacionalidad.split(",")
+            paises_split = nacionalidad.split(",")
             for pais in paises_split:
-                p,created=Pais.objects.get_or_create(nombre=pais)
+                p, created = Pais.objects.get_or_create(nombre=pais)
                 jug.nacionalidades.add(p)
-                
-            
             
             lista_whoosh.append((nombre, edad, altura, nacionalidad, pie, posicion_principal, posicion_secundaria, valor, equipo, contrato))
         progreso += 1
@@ -227,79 +227,136 @@ def almacenar_datos():
         i += 1
     writer.commit()
     print("Se han indexado " + str(i) + " jugadores")  
+
+
 def jugador_to_string(r):
-    return r['nombre']+' ('+str(r['edad'])+" - "+r['nacionalidad']+'): '+r['posicion_principal']+' ('+r['posicion_secundaria']+') | Valor:'+str(r['valor'])+' M, Club: '+r['equipo']+" ("+r['contrato'].strftime('%d/%m/%Y')+")"
+    return r['nombre'] + ' (' + str(r['edad']) + " - " + r['nacionalidad'] + '): ' + r['posicion_principal'] + ' (' + r['posicion_secundaria'] + ') | Valor:' + str(r['valor']) + ' M, Club: ' + r['equipo'] + " (" + r['contrato'].strftime('%d/%m/%Y') + ")"
+
 
 def decode_list_utf8(lista):
-    decoded_list=[]
+    decoded_list = []
     for i in lista:
         decoded_list.append(i.decode("utf-8"))
     return decoded_list
 
-def buscar_posicion_valor(entry_posicion,entry_rango):
-    #abrimos el �ndice
-    ix=open_dir("Index")
 
-        #creamos un searcher en el �ndice    
-    num_docs=ix.doc_count()
+def buscar_posicion_valor(posicion, rango1, rango2):
+    # abrimos el �ndice
+    ix = open_dir("Index")
 
+        # creamos un searcher en el �ndice    
+    num_docs = ix.doc_count()
+    jugadores = []
     with ix.searcher() as searcher:
-
-        posicion=entry_posicion.get()
-        rango_valor=entry_rango.get()
             
-            
-        rangos=rango_valor.split("-")
-        rango1=rangos[0]
-        rango2=rangos[1]
-        query_posicion = MultifieldParser(["posicion_principal","posicion_secundaria"], ix.schema, group=OrGroup).parse("'"+posicion+"'")
-        results_posicion = searcher.search(query_posicion,limit=num_docs,sortedby=["posicion_principal","posicion_secundaria","valor"],reverse=True)
-        rango_valor = '['+ rango1 + ' TO ' + rango2 +']'
+        rango1 = str(rango1)
+        rango2 = str(rango2)
+        query_posicion = MultifieldParser(["posicion_principal", "posicion_secundaria"], ix.schema, group=OrGroup).parse("'" + posicion + "'")
+        results_posicion = searcher.search(query_posicion, limit=num_docs, sortedby=["posicion_principal", "posicion_secundaria", "valor"], reverse=True)
+        rango_valor = '[' + rango1 + ' TO ' + rango2 + ']'
         query_valor = QueryParser("valor", ix.schema).parse(rango_valor)
-        results_valor = searcher.search(query_valor,limit=num_docs)
-            
+        results_valor = searcher.search(query_valor, limit=num_docs)
+        if len(results_valor) == 0:
+            return jugadores
         results_posicion.filter(results_valor)
-        results=results_posicion
+        results = results_posicion
+        
+        for hit in results:
+            nombre_hit = hit['nombre']
+            valor_hit = hit['valor']
+            jugador = Jugador.objects.get(nombre=nombre_hit, valor=valor_hit)
+            jugadores.append(jugador)
             
-    return  results
+    return  jugadores
+
 
 def buscar_nacionalidad(en):
-    #abrimos el �ndice
-    ix=open_dir("Index")
+    # abrimos el �ndice
+    ix = open_dir("Index")
 
-    #creamos un searcher en el �ndice    
-    num_docs=ix.doc_count()
-        
+    # creamos un searcher en el �ndice    
+    num_docs = ix.doc_count()
+    jugadores = []
     with ix.searcher() as searcher:
             
         query = QueryParser("nacionalidad", ix.schema).parse(en)
-        results = searcher.search(query,limit=num_docs,sortedby=["valor"],reverse=True)
+        results = searcher.search(query, limit=num_docs, sortedby=["valor"], reverse=True)
+        
+        for hit in results:
+            nombre_hit = hit['nombre']
+            valor_hit = hit['valor']
+            jugador = Jugador.objects.get(nombre=nombre_hit, valor=valor_hit)
+            jugadores.append(jugador)
                         
-    return results
+    return jugadores
     
     
 def buscar_contrato(en):
-    #abrimos el �ndice
-    ix=open_dir("Index")
+    # abrimos el �ndice
+    ix = open_dir("Index")
 
-    #creamos un searcher en el �ndice    
-    num_docs=ix.doc_count()
-        
+    # creamos un searcher en el �ndice    
+    num_docs = ix.doc_count()
+    jugadores = None
     with ix.searcher() as searcher:
-        en_datetime=datetime.strptime(en.get(), '%d/%m/%Y').strftime("%Y%m%d")
+        en_datetime = en.strftime("%Y%m%d")
  
         now = datetime.now()
-        now_datetime=now.strftime("%Y%m%d")
+        now_datetime = now.strftime("%Y%m%d")
 
         rango_fecha = '[' + now_datetime + ' TO ' + en_datetime + ']'
         query = QueryParser("contrato", ix.schema).parse(rango_fecha)
-        results = searcher.search(query,limit=num_docs,sortedby=["contrato","valor"],reverse=False)
+        results = searcher.search(query, limit=num_docs, sortedby=["contrato", "valor"], reverse=False)
             
+        for hit in results:
+            nombre_hit = hit['nombre']
+            valor_hit = hit['valor']
+            jugador = Jugador.objects.get(nombre=nombre_hit, valor=valor_hit)
+            jugadores.append(jugador)
             
-    return results
+    return jugadores
     
     
 def populate():
     almacenar_datos()
 
 
+def lista_posiciones_principales_secundarias():
+    posiciones_principales = PosicionPrincipal.objects.values_list('nombre', flat=True)
+    lista_posiciones_principales = list(posiciones_principales)
+    posiciones_secundarias = PosicionSecundaria.objects.values_list('nombre', flat=True)
+    lista_posiciones_secundarias = list(posiciones_secundarias)
+    list_posiciones = lista_posiciones_principales + lista_posiciones_secundarias
+    posiciones = list(dict.fromkeys(list_posiciones))
+    if posiciones == []:
+        return None
+    posiciones.remove('Ninguna')
+    posiciones_tuple = ()
+    for pos in posiciones:
+        tupla = (pos, pos,)
+        posiciones_tuple = posiciones_tuple + (tupla,)   
+    return posiciones_tuple
+
+
+def lista_nacionalidades():
+    nacionalidades = Pais.objects.values_list('nombre', flat=True)
+    
+    if nacionalidades == []:
+        return None
+    nacionalidades_tuple = ()
+    for pais in nacionalidades:
+        tupla = (pais, pais,)
+        nacionalidades_tuple = nacionalidades_tuple + (tupla,)   
+    return nacionalidades_tuple
+
+
+def lista_equipos():
+    equipos = Equipo.objects.values_list('nombre', flat=True)
+    
+    if equipos == []:
+        return None
+    equipos_tuple = ()
+    for equipo in equipos:
+        tupla = (equipo, equipo,)
+        equipos_tuple = equipos_tuple + (tupla,)   
+    return equipos_tuple

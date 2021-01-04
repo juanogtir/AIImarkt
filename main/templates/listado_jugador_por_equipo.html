@@ -1,0 +1,32 @@
+{% extends 'master.html' %} {% block titulo %} Listado de jugadores {% endblock %} {% block contenido %}
+<div class="uk-animation-slide-bottom">
+	<form class="uk-form" id="formulario" method="post" action=''>
+		{% csrf_token %} {{formulario}} <input class="uk-button" type='submit'
+			value='Realizar Busqueda' />
+	</form>
+	<hr>
+
+	{% if jugadores %}
+	<h3>Jugadores de {{equipo_seleccionado}}: {{ jugadores|length }}</h3>
+	<dl class="uk-description-list-line">
+		<hr>
+		{% for row in jugadores %}
+		<dt>
+			<strong><img src={{row.foto_jugador}} , height="50px" ,width="50px" />{{row}}{% if row.capitan %} (c) {% endif %}</strong>
+		</dt>
+		<dd>Posicion principal: {{row.posicion_principal.nombre}} |
+			Posiciones secundarias: {{row.posiciones_secundarias.all|join:", "}}</dd>
+		<dd>Altura: {{row.altura}} cm | Pie: {{row.pie }} |
+			Nacionalidad(es): {{row.nacionalidades.all|join:", "}}</dd>
+		<dd>Valor: {{row.valor}} M euros | Contrato hasta:
+			{{row.contrato}} | Equipo: {{row.equipo}}</dd>
+		<hr>
+		{% endfor %}
+
+	</dl>
+
+	{% endif %} {% if jugadores|length == 0 and jugadores != None %}
+	<h3>Ningun jugador cumple el filtro</h3>
+	{% endif %}
+</div>
+{% endblock %}

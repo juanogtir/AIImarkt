@@ -1,0 +1,17 @@
+{% extends 'master.html' %}
+
+{% block titulo %} Whoosh {% endblock %}
+{% block whoosh_index %} uk-active {% endblock %}
+
+{% block contenido %} 
+
+	<nav class="uk-navbar">
+		    <ul class="uk-navbar-nav">
+		        <li class="{% block whoosh_posiciones_valor %} {% endblock %}"><a href="./buscar_posicion_valor">Buscar por posicion y valor</a></li>
+		        <li class="{% block whoosh_nacionalidad %} {% endblock %}"><a href="./buscar_nacionalidad">Buscar por nacionalidad</a></li>
+		        <li class="{% block whoosh_contrato %} {% endblock %}"><a href="./buscar_contrato">Buscar por contrato</a></li>
+		        
+		    </ul>
+		</nav>
+
+{% endblock %}
