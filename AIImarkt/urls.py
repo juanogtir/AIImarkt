@@ -16,15 +16,30 @@ Including another URLconf
 from django.contrib import admin
 from django.urls import path
 from main import views
+from main import views_rs
 
 urlpatterns = [
     path('admin/', admin.site.urls),
+    
     path('',views.index),
+
+    path('ingresar',views.ingresar),
+    path('cerrar',views.cerrar),
+    path('privado',views.privado),
+    path('usuarionuevo',views.usuario_nuevo),
+
     path('populate/', views.populateDatabase),
+    
     path('whoosh/', views.index_whoosh),
     path('whoosh/buscar_posicion_valor', views.whoosh_buscar_posicion_valor),
     path('whoosh/buscar_nacionalidad', views.whoosh_buscar_nacionalidad),
     path('whoosh/buscar_contrato', views.whoosh_buscar_contrato), 
+    
     path('listado_equipos/', views.lista_equipos),  
     path('listado_jugadores/', views.lista_jugadores_por_equipo),
+    
+    path('rs/', views.index_rs),
+    path('rs/populate/', views_rs.datos_RS),
+    path('rs/loadRecsys/', views_rs.loadRS),
 ]
+

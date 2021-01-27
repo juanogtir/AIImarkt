@@ -20,13 +20,8 @@
 		    	<li><a href="/">Inicio</a></li>
 		    	<li><a href="/populate">Poblar datos</a></li>
 		    	<li class="{% block whoosh_index %} {% endblock %}"><a href="/whoosh">Whoosh</a></li>
-		    	<li class="{% block rs_index %} {% endblock %}"><a href="/rs">Sistema de Recomendacion</a></li>
 		    	<li class="{% block lista_equipos %} {% endblock %}"><a href="/listado_equipos">Listar Equipos</a></li>
 		    	<li class="{% block lista_jugadores %} {% endblock %}"><a href="/listado_jugadores">Listar Jugadores</a></li>
-		    	<br>
-		    	<li class="{% block ingresar %} {% endblock %}"><a href="/ingresar">Ingresar</a></li>
-		    	<li class="{% block nuevousuario %} {% endblock %}"><a href="/usuarionuevo">Nuevo Usuario</a></li>
-		    	<li class="{% block cerrar %} {% endblock %}"><a href="cerrar">Cerrar</a></li>
 		    	
 		      
 		        
@@ -37,7 +32,7 @@
 
 
 		<div class="contenido">
-		{% block contenido %} {% endblock %}
+		<p>Error: no hay jugadores suficientes, <a href="/populate">cargue la base de datos</a>.</p>
 		</div>
 	</div>
   </body>

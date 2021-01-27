@@ -1,0 +1,9 @@
+{% extends 'master.html' %}
+
+{% block titulo %} Usuario: Registro {% endblock %}
+{% block contenido %}
+	<form id='formulario' method='post' action=''>{% csrf_token %}
+		<table>{{formulario}}</table>
+		<p><input type='submit' value='Registrar'/></p>
+	</form>
+{% endblock %}

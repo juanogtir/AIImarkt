@@ -1,0 +1,8 @@
+{% extends 'master.html' %}
+
+{% block titulo %} Usuario: Bienvenido {% endblock %}
+{% block contenido %}
+	<p>Bievenido {{usuario.username|upper}},
+		la ultima vez que te vimos por aqui fue el {{usuario.last_login}}.</p>
+	<p>Eres miembro desde el {{usuario.date_joined}}</p>
+{% endblock %}

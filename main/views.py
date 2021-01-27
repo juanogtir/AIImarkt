@@ -1,7 +1,12 @@
 # encoding:utf-8
+
 from main.models import Jugador, Equipo, Pais, PieChoice, PosicionPrincipal, PosicionSecundaria
 from main.forms import  PosicionValorBusquedaForm, NacionalidadBusquedaForm, ContratoBusquedaForm, ListadoEquiposForm
-from django.shortcuts import render, HttpResponse
+from django.contrib.auth.forms import AuthenticationForm, UserCreationForm
+from django.contrib.auth import authenticate, login, logout
+from django.contrib.auth.decorators import login_required
+from django.contrib.auth.models import User
+from django.shortcuts import render, HttpResponse,redirect
 from django.template import RequestContext
 from django.db.models import Avg
 from django.http.response import HttpResponseRedirect
@@ -9,6 +14,51 @@ from django.conf import settings
 
 from main import aiimarkt_utils
 
+# Gestion de usuarios
+def ingresar(request):
+    if not request.user.is_anonymous:
+        return HttpResponseRedirect('/privado')
+    if request.method == 'POST':
+        formulario = AuthenticationForm(request.POST)
+        if formulario.is_valid:
+            usuario = request.POST['username']
+            clave = request.POST['password']
+            acceso = authenticate(username=usuario, password=clave)
+            if acceso is not None:
+                if acceso.is_active:
+                    login(request, acceso)
+                    return HttpResponseRedirect('/privado')
+                else:
+                    return render(request, 'noactivo.html')
+            else:
+                return render(request, 'nousuario.html')
+    else:
+        formulario = AuthenticationForm()
+    context = {'formulario': formulario}
+    return render(request, 'ingresar.html', context)
+
+def usuario_nuevo(request):
+    if request.method=='POST':
+        formulario = UserCreationForm(request.POST)
+        if formulario.is_valid:
+            formulario.save()
+            return HttpResponseRedirect('/')
+    else:
+        formulario = UserCreationForm()
+    context = {'formulario': formulario}
+    return render(request, 'nuevousuario.html', context)
+
+@login_required(login_url='/ingresar')
+def privado(request):
+    usuario = request.user
+    context = {'usuario': usuario}
+    return render(request, 'privado.html', context)
+
+@login_required(login_url='/ingresar')
+def cerrar(request):
+    logout(request)
+    return HttpResponseRedirect('/')
+#######################################################################################################
 
 def index(request):
     return render(request, 'index.html', {'STATIC_URL':settings.STATIC_URL})
@@ -17,10 +67,21 @@ def index(request):
 def index_whoosh(request):
     return render(request, 'index_whoosh.html', {'STATIC_URL':settings.STATIC_URL})
 
+def index_rs(request):
+    return render(request, 'index_rs.html', {'STATIC_URL':settings.STATIC_URL})
 
+@login_required(login_url='/ingresar')
 def populateDatabase(request):
-    aiimarkt_utils.populate()
-    return render(request, 'index.html', {'STATIC_URL':settings.STATIC_URL})
+    if request.method=='POST':
+        if 'Aceptar' in request.POST:     
+            aiimarkt_utils.populate()
+            num_jugadores=Jugador.objects.count()
+            num_equipos=Equipo.objects.count()
+            mensaje="Se han almacenado: " + str(num_jugadores) +" jugadores de " + str(num_equipos) +" equipos"
+            return render(request, 'cargaBD.html', {'mensaje':mensaje})
+        else:
+            return redirect("/")
+    return render(request, 'confirmacion.html', {'STATIC_URL':settings.STATIC_URL})
 
 
 def lista_equipos(request):
@@ -40,10 +101,8 @@ def lista_jugadores_por_equipo(request):
     formulario = ListadoEquiposForm()
     equipo_form = None
     jugadores_result = None
-    print(formulario)
     if request.method == 'POST':
         formulario = ListadoEquiposForm(request.POST)
-        print(formulario)
         if formulario.is_valid():
             
             equipo_form = formulario.cleaned_data['equipo']
@@ -57,6 +116,7 @@ def lista_jugadores_por_equipo(request):
 
 
 # WHOOSH
+
 def whoosh_buscar_posicion_valor(request):
     formulario = PosicionValorBusquedaForm()
 

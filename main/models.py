@@ -2,6 +2,7 @@
 
 from django.db import models
 from enum import Enum
+from django.core.validators import MinValueValidator,MaxValueValidator,URLValidator
 
 class PieChoice(Enum):
     IZQ="izquierdo"
@@ -53,7 +54,7 @@ class Jugador(models.Model):
 
     pie=models.CharField(max_length=3,verbose_name='Pie',choices=[(tag,tag.value) for tag in PieChoice])
 
-    posicion_principal=models.ForeignKey(PosicionPrincipal,on_delete=models.CASCADE)
+    posicion_principal=models.ForeignKey(PosicionPrincipal,on_delete=models.DO_NOTHING)
     posiciones_secundarias=models.ManyToManyField(PosicionSecundaria)
 
     nacionalidades=models.ManyToManyField(Pais)
@@ -65,3 +66,34 @@ class Jugador(models.Model):
     class Meta:
         ordering = ('nombre', 'valor','idJugador')
         db_table = "Jugadores"
+
+class Profesion(models.Model):
+    numero = models.IntegerField(verbose_name='Numero de la profesion',default=1)
+    nombre = models.TextField(verbose_name='Nombre de la profesion')
+    
+    def __str__(self):
+        return self.nombre
+    class Meta:
+        ordering = ('nombre',)
+        db_table = "Profesiones"
+        
+class Usuario(models.Model):
+    numUsuario=models.IntegerField(verbose_name='Numero de usuario',default=1,null=True)
+    edad = models.PositiveSmallIntegerField(validators=[MinValueValidator(1), MaxValueValidator(100)])
+    genero = models.CharField(max_length=1, choices=(('F', 'Femenino'),('M','Masculino'),))
+    equipo_favorito=models.ForeignKey(Equipo, on_delete=models.DO_NOTHING)
+    profesion = models.ForeignKey(Profesion, on_delete=models.DO_NOTHING)
+    zipCode = models.CharField(max_length=8)
+
+    def __str__(self):
+        return self.genero+" "+str(self.zipCode)
+    class Meta:
+        ordering = ('numUsuario',)
+        db_table = "Usuarios"
+
+class Puntuacion(models.Model):
+    usuario = models.ForeignKey(Usuario, on_delete=models.DO_NOTHING)
+    jugador = models.ForeignKey(Jugador, on_delete=models.DO_NOTHING)
+    rating = models.PositiveSmallIntegerField(validators=[MinValueValidator(1), MaxValueValidator(5)])
+    def __str__(self):
+        return str(self.rating)+" "+self.jugador.nombre

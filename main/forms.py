@@ -4,7 +4,7 @@ from main.models import Jugador, Equipo, Pais, PieChoice, PosicionPrincipal, Pos
 from main import aiimarkt_utils
 import datetime
 
-   
+
 class PosicionValorBusquedaForm(forms.Form):
     choices = aiimarkt_utils.lista_posiciones_principales_secundarias()
     rango1 = forms.CharField(label="Rango inferior", widget=forms.TextInput(attrs={'type':'number'}), required=True, initial="20")

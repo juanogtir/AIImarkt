@@ -1,5 +1,5 @@
-{% extends 'master.html' %} {% block titulo %} Busqueda de jugadores {%
-endblock %} {% block contenido %}
+{% extends 'master.html' %} {% block titulo %} Busqueda de jugadores {%endblock %} 
+{% block contenido %}
 <div class="uk-animation-slide-bottom">
 	<form class="uk-form" id="formulario" method="post" action=''>
 		{% csrf_token %} {{formulario}} <input class="uk-button" type='submit'

@@ -14,7 +14,7 @@ HEADERS = {'User-Agent':
            'Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/47.0.2526.106 Safari/537.36'}
 TRANSFERMARKT = "https://www.transfermarkt.es"
 BASE_LEAGUE = "/main/marktwerteverein/wettbewerb/"
-LALIGA = BASE_LEAGUE + "ES1"
+LALIGA = BASE_LEAGUE + "GB1"
 LIMITE_EQUIPOS = 20  # Hasta 20
 
 
@@ -95,6 +95,10 @@ def extrae_valor(div):
     
 def extraer_datos_jugador(url_jugador, nombre):
     s = bs_transfermarkt(url_jugador)
+    
+    if not s.find("div", class_="dataMarktwert") or not s.find("div", class_="row collapse"):
+        return
+    
     # Valor
     info_valor = s.find("div", class_="dataMarktwert")
     valor = extrae_valor(info_valor)
@@ -156,7 +160,6 @@ def extraer_datos_jugador(url_jugador, nombre):
 def almacenar_datos_bs():
     equipos = extraer_equipos()
     lista_whoosh = []
-    
     tablas = [Jugador, Equipo, Pais, PosicionPrincipal, PosicionSecundaria]
     for tabla in tablas:
         tabla.objects.all().delete()
@@ -169,7 +172,10 @@ def almacenar_datos_bs():
             nombre = jugador["nombre"]
             capitan = jugador["capitan"]
             
-            edad, altura, nacionalidad, pie, posicion_principal, posicion_secundaria, valor, contrato, foto_jugador = extraer_datos_jugador(jugador["enlace"], nombre)
+            try:
+                edad, altura, nacionalidad, pie, posicion_principal, posicion_secundaria, valor, contrato, foto_jugador = extraer_datos_jugador(jugador["enlace"], nombre)
+            except TypeError:
+                continue
                         
             if pie == PieChoice.IZQ.value:
                 pie_choice = PieChoice.IZQ
@@ -185,7 +191,7 @@ def almacenar_datos_bs():
             pos_princ, created = PosicionPrincipal.objects.get_or_create(nombre=posicion_principal)
             contr = date(contrato.year, contrato.month, contrato.day)
 
-            jug, created = Jugador.objects.get_or_create(nombre=nombre, edad=edad, altura=altura, valor=valor, contrato=contr, capitan=capitan, foto_jugador=foto_jugador, pie=pie_choice, posicion_principal=pos_princ, equipo=equip)
+            jug = Jugador(nombre=nombre, edad=edad, altura=altura, valor=valor, contrato=contr, capitan=capitan, foto_jugador=foto_jugador, pie=pie_choice, posicion_principal=pos_princ, equipo=equip)
             jug.save()
             posicion_secundaria_split = posicion_secundaria.split(",")
             for p_s in posicion_secundaria_split:
@@ -198,6 +204,7 @@ def almacenar_datos_bs():
             
             lista_whoosh.append((nombre, edad, altura, nacionalidad, pie, posicion_principal, posicion_secundaria, valor, equipo, contrato))
         progreso += 1
+        
     
     return lista_whoosh
 
@@ -297,7 +304,7 @@ def buscar_contrato(en):
 
     # creamos un searcher en el �ndice    
     num_docs = ix.doc_count()
-    jugadores = None
+    jugadores = []
     with ix.searcher() as searcher:
         en_datetime = en.strftime("%Y%m%d")
  
@@ -307,7 +314,7 @@ def buscar_contrato(en):
         rango_fecha = '[' + now_datetime + ' TO ' + en_datetime + ']'
         query = QueryParser("contrato", ix.schema).parse(rango_fecha)
         results = searcher.search(query, limit=num_docs, sortedby=["contrato", "valor"], reverse=False)
-            
+
         for hit in results:
             nombre_hit = hit['nombre']
             valor_hit = hit['valor']
