@@ -1,0 +1,23 @@
+{% extends 'master.html' %}
+
+{% block titulo %} Sistemas de Recomendacion {% endblock %}
+{% block rs_index %} uk-active {% endblock %}
+
+{% block contenido %} 
+	<h3>Indice RS</h3>
+	<nav class="uk-navbar">
+		    <ul class="uk-navbar-nav">
+		        <li><a href="./populate">Poblar datos</a></li>
+		        <li><a href="./loadRecsys">Cargar datos RS</a></li>
+		        <br>
+		        <li><a href="./recomendar_jugadorU">Recomendar jugadores a un usuario</a>(Basado en Usuarios)</li>
+		        <li><a href="./recomendar_jugadorI">Recomendar jugadores a un usuario</a>(Basado en Items)</li>
+		        <li><a href="./similar_jugador">Jugadores similares</a></li>
+		        <li><a href="./recomendar_usuarios">Recomendar usuarios a un jugador</a></li>
+		    </ul>
+		</nav>
+		<div class="mensaje">
+		{% block mensaje %} {% endblock %}
+		</div>
+
+{% endblock %}

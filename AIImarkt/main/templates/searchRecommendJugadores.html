@@ -1,0 +1,31 @@
+{% extends 'master.html' %} 
+{% block titulo %} Recomendar Jugadores {%endblock %} 
+{% block contenido %}
+<h1>Recomendar Jugadores</h1>
+
+<form class="uk-form" id="formulario" method="post" action=''>
+	{% csrf_token %} {{form}} <input class="uk-button" type='submit'
+		value='Realizar Busqueda' />
+</form>
+
+<hr>
+{% if items %}
+
+<h3>Recomendar jugadores para <strong>{{user}}</strong>:</h3>
+<dt>
+</dt>
+<dd>Edad: {{user.edad}} | Genero: {{user.genero}} | CP: {{user.zipCode}}</dd>
+<dd>Profesion: {{user.profesion}} | Equipo favorito: {{user.equipo_favorito }}</dd>
+
+<hr>
+
+{% for item, score in items %}
+<ul>
+	<li>Jugador: {{item}} | Valor: {{item.valor}} | Equipo: {{item.equipo}}</li>
+	<li>Score:{{score |	floatformat:"2"}}</li>
+</ul>
+{% empty %}
+<h2>Insufficient user data</h2>
+{% endfor %} 
+{% endif %} 
+{% endblock %}

@@ -1,0 +1,21 @@
+{% extends 'master.html' %} 
+{% block titulo %} Buscar Usuario {%endblock %} 
+{% block contenido %}
+<h1>Buscar Usuario</h1>
+
+<form class="uk-form" id="formulario" method="post" action=''>
+	{% csrf_token %} {{form}} <input class="uk-button" type='submit'
+		value='Realizar Busqueda' />
+</form>
+
+<hr>
+{% if items %} 
+{% for item, score in items %}
+<ul>
+	<li>Jugador: {{item}} | Valor: {{item.valor}} | Score:{{score |	floatformat:"2"}}</li>
+</ul>
+{% empty %}
+<h2>Insufficient user data</h2>
+{% endfor %} 
+{% endif %} 
+{% endblock %}

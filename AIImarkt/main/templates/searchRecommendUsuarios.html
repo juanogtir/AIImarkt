@@ -1,0 +1,35 @@
+{% extends 'master.html' %} 
+{% block titulo %} Recomendar Usuarios {%endblock %} 
+{% block contenido %}
+<h1>Recomendar Usuarios</h1>
+
+<form class="uk-form" id="formulario" method="post" action=''>
+	{% csrf_token %} {{form}} <input class="uk-button" type='submit'
+		value='Realizar Busqueda' />
+</form>
+
+<hr>
+{% if items %} 
+
+<h3>Recomendar usuarios para {{jugador.nombre}}:</h3>
+<dt>
+	<strong><img src={{jugador.foto_jugador}} , height="50px" ,width="50px" />{{jugador}}{% if jugador.capitan %} (c) {% endif %}</strong>
+</dt>
+<dd>Posicion principal: {{jugador.posicion_principal.nombre}} |
+			Posiciones secundarias: {{jugador.posiciones_secundarias.all|join:", "}}</dd>
+<dd>Altura: {{jugador.altura}} cm | Pie: {{jugador.pie }} |
+			Nacionalidad(es): {{jugador.nacionalidades.all|join:", "}}</dd>
+<dd>Valor: {{jugador.valor}} M euros | Contrato hasta:
+			{{jugador.contrato}} | Equipo: {{jugador.equipo}}</dd>
+<hr>
+
+
+{% for user, score in items %}
+<ul>
+	<li>Usuario: {{user}} | Equipo favorito: {{user.equipo_favorito}} | Score: {{score |	floatformat:"2"}}</li>
+</ul>
+{% empty %}
+<h2>Insufficient user data</h2>
+{% endfor %} 
+{% endif %} 
+{% endblock %}
